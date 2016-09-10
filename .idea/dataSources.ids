@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="dataSourceStorage">
+  <data-source name="MySQL - policeReports@localhost" uuid="034cf2d7-f9f3-4fd9-b8f5-36c663bbb594">
+    <database-info product="MySQL" version="5.7.14" jdbc-version="4.0" driver-name="MySQL Connector Java" driver-version="mysql-connector-java-5.1.35 ( Revision: 5fb9c5849535c13917c2cf9baaece6ef9693ef27 )">
+      <extra-name-characters>#@</extra-name-characters>
+      <identifier-quote-string>`</identifier-quote-string>
+    </database-info>
+    <case-sensitivity plain-identifiers="mixed" quoted-identifiers="upper"/>
+    <database-model serializer="dbm" rdbms="MYSQL" format-version="2.6">
+      <schema id="1" name="policeReports">
+        <visible>1</visible>
+      </schema>
+      <schema id="2" name="information_schema"/>
+      <schema id="3" name="mysql"/>
+      <schema id="4" name="performance_schema"/>
+      <schema id="5" name="reservations"/>
+      <schema id="6" name="sys"/>
+      <schema id="7" name="userManagement"/>
+      <table id="8" parent="1" name="csvData"/>
+      <column id="9" parent="8" name="cadCdw">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="10" parent="8" name="cadNumber">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="11" parent="8" name="genOffense">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="12" parent="8" name="clearanceNumber">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="13" parent="8" name="clearanceDesc">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="14" parent="8" name="clearanceSubCat">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="15" parent="8" name="clearanceMainCat">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="16" parent="8" name="clearanceDT">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="17" parent="8" name="hundredBlck">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="18" parent="8" name="district">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="19" parent="8" name="zone">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="20" parent="8" name="censusTract">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="21" parent="8" name="vertRadians">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="22" parent="8" name="latitude">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+      <column id="23" parent="8" name="location">
+        <mandatory>1</mandatory>
+        <data-type>varchar(100)|0</data-type>
+      </column>
+    </database-model>
+  </data-source>
+</component>
