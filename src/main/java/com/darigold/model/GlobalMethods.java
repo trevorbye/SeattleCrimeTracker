@@ -5,6 +5,7 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.Geometry;
+import com.google.maps.model.LatLng;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -16,11 +17,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class GlobalMethods {
-
-
 
     //Create Hibernate Session method
     public static final SessionFactory ourSessionFactory;
@@ -39,23 +37,20 @@ public class GlobalMethods {
         return ourSessionFactory.openSession();
     }
 
-
-
     //query needed columns from database and store in list
     @SuppressWarnings("unchecked")
     public static List<CsvDataEntity> baseQuery() throws HibernateException{
         Session session = getSession();
         session.beginTransaction();
-        String hql = "SELECT CsvDataEntity.clearanceMainCat, CsvDataEntity.clearanceDT, CsvDataEntity.vertRadians, CsvDataEntity.latitude FROM CsvDataEntity";
+        String hql = "SELECT x.clearanceMainCat, x.clearanceDT, x.vertRadians, x.latitude FROM CsvDataEntity x";
         List<CsvDataEntity> list = session.createQuery(hql).list();
         session.close();
-        System.out.print(list.toString());
         return list;
     }
 
-    //TODO add in functionality to handle the condition when nothing is returned based on user-defined parameters
+
     //pass in the query return list
-    public static Map<Integer, String> analyzeQuery(String address, String distance, String years, List<CsvDataEntity> fullList) throws Exception{
+    public static List<CrimeModel> analyzeQuery(String address, String distance, String years, List<CsvDataEntity> fullList) throws Exception{
 
         //create 'context' for GoogleMaps GeoCode API, geocode user-defined address
         GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyB3HBeFw_I35oOAnOcpjxctSp5wFx2-wqE");
@@ -70,7 +65,7 @@ public class GlobalMethods {
         double requestedDistanceInMiles = Double.parseDouble(distance);
 
         //list to store all the crimes within the specified distance
-        List<String> crimeList = new ArrayList<>();
+        List<CrimeModel> crimeList = new ArrayList<>();
 
         for (CsvDataEntity record : fullList) {
 
@@ -84,6 +79,12 @@ public class GlobalMethods {
                 withinDistance = true;
             }
 
+                //get address of crime to add to model
+                LatLng location = new LatLng(rowLat, rowLng);
+                GeocodingResult[] reverse = GeocodingApi.reverseGeocode(context, location).await();
+                String crimeAddress = reverse[0].formattedAddress;
+
+
             //verifying crime was committed within user-defined time-range
             Boolean withinTimeRange =false;
             double requestedYears = Double.parseDouble(years);
@@ -94,16 +95,18 @@ public class GlobalMethods {
             //compare two dates
             LocalDate recordDateMaster = LocalDate.parse(recordDateAsString,formatter);
             LocalDate currentDate = LocalDate.now();
-            long daysBetween = ChronoUnit.DAYS.between(currentDate, recordDateMaster);
+            long daysBetween = Math.abs(ChronoUnit.DAYS.between(currentDate, recordDateMaster));
 
             if (daysBetween <= requestedDays) {
                 withinTimeRange = true;
             }
 
             if (withinDistance && withinTimeRange) {
-                crimeList.add(record.getClearanceMainCat());
+                crimeList.add(new CrimeModel(record.getClearanceMainCat(),crimeAddress, milesBetween, recordDateMaster));
             }
         }
+
+        return crimeList;
     }
 
 
