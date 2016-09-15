@@ -8,6 +8,40 @@
     <title>Crime Tracker | Results</title>
 </head>
 <body>
-    <p th:text="${searchModel.address}"/>
+
+<table class="table-style">
+    <thead>
+    <tr>
+        <th>Offense Desc.</th>
+        <th>Count Within Search Parameters</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="entry : ${rankedModel}">
+        <td th:text="${entry.crimeDesc}"></td>
+        <td th:text="${entry.distinctCount}"></td>
+    </tr>
+    </tbody>
+</table>
+
+    <table class="table-style">
+        <thead>
+            <tr>
+            <th>Offense Desc.</th>
+            <th>Distance (mi)</th>
+            <th>Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr th:each="crime : ${crimeModel}">
+                <td th:text="${crime.mainCrimeDesc}"></td>
+                <td th:text="${crime.distance}"></td>
+                <td th:text="${crime.crimeDate}"></td>
+            </tr>
+        </tbody>
+    </table>
+
 </body>
 </html>

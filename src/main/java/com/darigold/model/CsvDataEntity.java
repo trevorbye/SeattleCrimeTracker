@@ -28,7 +28,10 @@ public class CsvDataEntity {
     private String latitude;
     private String location;
 
-    @Basic
+
+
+
+    @Id
     @Column(name = "cadCdw", nullable = false, length = 100)
     public String getCadCdw() {
         return cadCdw;
@@ -99,7 +102,7 @@ public class CsvDataEntity {
     }
 
     @Basic
-    @Column(name = "clearanceDT", nullable = false, length = 100)
+    @Column(name = "clearanceDt", nullable = false, length = 100)
     public String getClearanceDt() {
         return clearanceDt;
     }
@@ -226,16 +229,5 @@ public class CsvDataEntity {
         result = 31 * result + (latitude != null ? latitude.hashCode() : 0);
         result = 31 * result + (location != null ? location.hashCode() : 0);
         return result;
-    }
-
-    private String id;
-
-    @Id
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 }

@@ -5,18 +5,18 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.Geometry;
-import com.google.maps.model.LatLng;
+import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.criterion.ProjectionList;
+import org.hibernate.criterion.Projections;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 public class GlobalMethods {
 
@@ -39,18 +39,69 @@ public class GlobalMethods {
 
     //query needed columns from database and store in list
     @SuppressWarnings("unchecked")
-    public static List<CsvDataEntity> baseQuery() throws HibernateException{
+    public static List<Object[]> baseQuery() throws HibernateException{
         Session session = getSession();
-        session.beginTransaction();
-        String hql = "SELECT x.clearanceMainCat, x.clearanceDT, x.vertRadians, x.latitude FROM CsvDataEntity x";
-        List<CsvDataEntity> list = session.createQuery(hql).list();
-        session.close();
+        Criteria criteria = session.createCriteria(CsvDataEntity.class);
+        ProjectionList projectionList = Projections.projectionList();
+        projectionList.add(Projections.property("clearanceMainCat"));
+        projectionList.add(Projections.property("clearanceDt"));
+        projectionList.add(Projections.property("vertRadians"));
+        projectionList.add(Projections.property("latitude"));
+        criteria.setProjection(projectionList);
+
+        List<Object[]> list = criteria.list();
+        return list;
+    }
+
+
+    //method to loop through location-filtered crime list and perform distinct count
+    public static Map<String, Integer> distinctCountMap(List<CrimeModel> crimeList) {
+
+        Map<String, Integer> distinctMap = new HashMap<>();
+        String crime;
+
+        for (CrimeModel record : crimeList) {
+            crime = record.getMainCrimeDesc();
+
+            if (distinctMap.containsKey(crime)) {
+                distinctMap.put(crime, distinctMap.get(crime) + 1);
+            } else {
+                distinctMap.put(crime, 1);
+            }
+        }
+
+        return distinctMap;
+    }
+
+    //transfers distinctCountMap into a reversed navigable map
+    public static NavigableMap<Integer,String> rankedMap(Map<String,Integer> distinctMap) {
+        TreeMap<Integer,String> treeMap = new TreeMap<>();
+
+        for (Map.Entry<String,Integer> entry : distinctMap.entrySet()) {
+            String valueTemp = entry.getKey();
+            Integer keyTemp = entry.getValue();
+            treeMap.put(keyTemp,valueTemp);
+        }
+
+        NavigableMap<Integer,String> nmap = treeMap.descendingMap();
+        return nmap;
+    }
+
+    //convert navigable list into list of CrimeRank objects to use in model
+    public static List<CrimeRank> distinctAsList(NavigableMap<Integer,String> navigableMap) {
+        List<CrimeRank> list = new ArrayList<>();
+
+        for (Map.Entry<Integer,String> entry : navigableMap.entrySet()) {
+            CrimeRank rankObject = new CrimeRank(entry.getValue(),entry.getKey());
+            list.add(rankObject);
+        }
+
         return list;
     }
 
 
     //pass in the query return list
-    public static List<CrimeModel> analyzeQuery(String address, String distance, String years, List<CsvDataEntity> fullList) throws Exception{
+    public static List<CrimeModel> analyzeQuery(String address, String distance, String years, List<Object[]> fullList) throws Exception{
 
         //create 'context' for GoogleMaps GeoCode API, geocode user-defined address
         GeoApiContext context = new GeoApiContext().setApiKey("AIzaSyB3HBeFw_I35oOAnOcpjxctSp5wFx2-wqE");
@@ -61,35 +112,47 @@ public class GlobalMethods {
         double longitude = coordinates.location.lng;
         double latitude = coordinates.location.lat;
 
-        //user requested distance, converted from miles to meters
+        //user requested distance
         double requestedDistanceInMiles = Double.parseDouble(distance);
 
         //list to store all the crimes within the specified distance
         List<CrimeModel> crimeList = new ArrayList<>();
 
-        for (CsvDataEntity record : fullList) {
+        for (Object[] record : fullList) {
 
             //verifying crime was commmitted within user-defined distance
             Boolean withinDistance = false;
-            double rowLng = Double.parseDouble(record.getVertRadians());
-            double rowLat = Double.parseDouble(record.getLatitude());
-            double milesBetween = (haversineDistance(latitude,rowLat,longitude,rowLng,0,0)) / 1609.34;
+            String recordLongtiude = (String)record[2];
+            String recordLatitude = (String)record[3];
+            double milesBetween;
+
+            if (recordLongtiude.isEmpty() || recordLatitude.isEmpty()) {
+                continue;
+            } else {
+                double rowLng = Double.parseDouble((String) record[2]);
+                double rowLat = Double.parseDouble((String) record[3]);
+                milesBetween = (haversineDistance(latitude, rowLat, longitude, rowLng, 0, 0)) / 1609.34;
+            }
 
             if (milesBetween <= requestedDistanceInMiles) {
                 withinDistance = true;
             }
 
-                //get address of crime to add to model
-                LatLng location = new LatLng(rowLat, rowLng);
-                GeocodingResult[] reverse = GeocodingApi.reverseGeocode(context, location).await();
-                String crimeAddress = reverse[0].formattedAddress;
-
-
             //verifying crime was committed within user-defined time-range
             Boolean withinTimeRange =false;
             double requestedYears = Double.parseDouble(years);
             long requestedDays = Math.round(requestedYears * 365);
-            String recordDateAsString = record.getClearanceDt().substring(0, 9);
+            String objectDate = (String)record[1];
+            String recordDateAsString;
+
+                //skip null records in database
+                if (objectDate.length() < 10) {
+                    continue;
+                } else {
+                    recordDateAsString = objectDate.substring(0, 10);
+                }
+
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy", Locale.ENGLISH);
 
             //compare two dates
@@ -101,8 +164,13 @@ public class GlobalMethods {
                 withinTimeRange = true;
             }
 
+            String crimeDesc = (String)record[0];
+            if (crimeDesc.isEmpty()) {
+                continue;
+            }
+
             if (withinDistance && withinTimeRange) {
-                crimeList.add(new CrimeModel(record.getClearanceMainCat(),crimeAddress, milesBetween, recordDateMaster));
+                crimeList.add(new CrimeModel(crimeDesc, milesBetween, recordDateMaster));
             }
         }
 
