@@ -179,8 +179,8 @@ public class GlobalMethods {
 
 
     //haversine formula for distance between coordinates
-    public static double haversineDistance(double lat1, double lat2, double lon1,
-                                  double lon2, double el1, double el2) {
+    static double haversineDistance(double lat1, double lat2, double lon1,
+                                    double lon2, double el1, double el2) {
 
         final int R = 6371; // Radius of the earth
 

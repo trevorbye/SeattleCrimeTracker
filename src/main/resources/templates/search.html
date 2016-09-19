@@ -1,18 +1,49 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <link rel="stylesheet" th:href="@{/form.css}"/>
     <title>Crime Tracker | Search</title>
 </head>
+
 <body>
-<form action="/results" method="post">
-    <input type="text" name="address" placeholder="Enter address."/>
-    <input type="text" name="distance" placeholder="Enter the distance to search."/>
-    <input type="text" name="dataYearsSearch" placeholder="Time-span (years, data starts 7/2015)"/>
-    <button>Search</button>
+<form class="bootstrap-frm" th:action="@{/results}" th:object="${searchFormBacking}" method="post">
+
+    <h1>Search 911 Database</h1>
+
+    <label>
+        <span>Enter the address to base search.</span>
+        <input type="text" th:field="*{searchAddress}" placeholder="Enter address."/>
+        <br/>
+        <div class="error-message" th:if="${#fields.hasErrors('searchAddress')}" th:errors="*{searchAddress}"></div>
+        <br/>
+    </label>
+
+    <label>
+        <span>Enter the search radius in miles.</span>
+        <input type="text" th:field="*{searchDistance}" placeholder="Enter the distance to search."/>
+        <br/>
+        <div class="error-message" th:if="${#fields.hasErrors('searchDistance')}" th:errors="*{searchDistance}"></div>
+        <br/>
+    </label>
+
+    <label>
+        <span>Enter time in years to query.</span>
+        <input type="text" th:field="*{searchTime}" placeholder="Time-span."/>
+        <br/>
+        <div class="error-message" th:if="${#fields.hasErrors('searchTime')}" th:errors="*{searchTime}"></div>
+        <br/>
+    </label>
+
+    <label>
+        <input class="button" type="submit" value="Submit"/>
+        <br/>
+        <input class="button" type="reset" value="Reset"/>
+    </label>
 </form>
+
 </body>
 </html>
